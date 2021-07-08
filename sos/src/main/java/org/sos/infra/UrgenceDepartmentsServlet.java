@@ -45,7 +45,6 @@ public class UrgenceDepartmentsServlet extends HttpServlet {
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "x-requested-with");
 
-
         // if (id == null && user == null) {
         // response.sendError(403);
         // return;
@@ -75,6 +74,15 @@ public class UrgenceDepartmentsServlet extends HttpServlet {
             switch (type) {
                 case 0:
                     getDepartments(idUser, GMT_PLUS, out);
+                    break;
+                case 1:
+                    addDepartment(idUser, dataObj, GMT_PLUS, out);
+                    break;
+                case 2:
+                    updateDepartment(idUser, dataObj, GMT_PLUS, out);
+                    break;
+                case 3:
+                    deleteDepartment(idUser, dataObj, GMT_PLUS, out);
                     break;
             }
 
@@ -111,6 +119,42 @@ public class UrgenceDepartmentsServlet extends HttpServlet {
         }
     }
 
+    void addDepartment(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
+        String req = "insert into  deparments (name, lat, lon, role) values ('" + data.getString("name") + "',"
+                + data.getLong("lat") + "," + data.getLong("lon") + ",'" + data.getString("role") + "')";
+        System.out.println(req);
+        int id = StaticVars.base.insertQueryGetId(req);
+        if (id != -1) {
+            getDepartments(idUser, GMT_PLUS, out);
+        } else {
+            out.println("{\"rep\" : \"erreur\"}");
+        }
+    }
+
+    void updateDepartment(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
+        String req = "update deparments  set name = '" + data.getString("name") + "', lat = " + data.getLong("lat")
+                + ", lon = " + data.getLong("lon") + ", role = '" + data.getString("role") + "' where id = "
+                + data.getInt("id");
+        System.out.println(req);
+        boolean b = StaticVars.base.insert(req);
+        if (b) {
+            getDepartments(idUser, GMT_PLUS, out);
+        } else {
+            out.println("{\"rep\" : \"erreur\"}");
+        }
+    }
+
+    
+    void deleteDepartment(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
+        String req = "delete from deparments  where id = " + data.getInt("id") + " limit 1";
+        System.out.println(req);
+        boolean b = StaticVars.base.insert(req);
+        if (b) {
+            getDepartments(idUser, GMT_PLUS, out);
+        } else {
+            out.println("{\"rep\" : \"erreur\"}");
+        }
+    }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the
     // + sign on the left to edit the code.">
