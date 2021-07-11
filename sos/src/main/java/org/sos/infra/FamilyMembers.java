@@ -1,26 +1,25 @@
 package org.sos.infra;
 
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import java.sql.ResultSetMetaData;
-
-import org.sos.database.dataBase;
-import org.sos.config.StaticVars;
-import org.sos.util.Util;
 import org.json.JSONObject;
+import org.sos.config.StaticVars;
+import org.sos.database.dataBase;
+import org.sos.util.Util;
 
-@WebServlet(name = "UserServlet", urlPatterns = { "/api/infra/users" })
-public class UserServlet extends HttpServlet {
+@WebServlet(name = "FamilyMembers", urlPatterns = { "/api/family_member" })
+public class FamilyMembers extends HttpServlet {
 
 	/**
 	 * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -72,19 +71,19 @@ public class UserServlet extends HttpServlet {
 			int type = dataObj.getInt("type");
 			switch (type) {
 				case 0:
-					getUsers(idUser, GMT_PLUS, out);
+					getFamilyMembers(idUser, GMT_PLUS, out);
 					break;
 				case 1:
-					addUser(idUser, dataObj, GMT_PLUS, out);
+					addFamilyMember(idUser, dataObj, GMT_PLUS, out);
 					break;
 				case 2:
-					updateUser(idUser, dataObj, GMT_PLUS, out);
+					deleteFamilyMember(idUser, dataObj, GMT_PLUS, out);
 					break;
 				case 3:
-					getHealthCard(idUser, GMT_PLUS, out);
+					getMessage(idUser, GMT_PLUS, out);
 					break;
 				case 4:
-					updateHealthCard(idUser, dataObj, GMT_PLUS, out);
+					updateMessage(idUser, dataObj, GMT_PLUS, out);
 					break;
 
 			}
@@ -94,9 +93,8 @@ public class UserServlet extends HttpServlet {
 		}
 	}
 
-	void getUsers(String idUser, int GMT_PLUS, PrintWriter out) {
-		String req = "select * from users order by firstName,lastName";
-		out.println("[");
+	void getFamilyMembers(String idUser, int GMT_PLUS, PrintWriter out) {
+		String req = "select * from family_group where idUser = " + idUser + " order by name";
 		try {
 
 			Statement stmt = StaticVars.base.createStatement();
@@ -105,6 +103,7 @@ public class UserServlet extends HttpServlet {
 			rs.last();
 			int count = rs.getRow();
 			rs.first();
+			out.println("[");
 			for (int i = 0; i < count; i++) {
 				out.println("{");
 				out.println(Util.getTableLigne(rs, GMT_PLUS));
@@ -122,36 +121,8 @@ public class UserServlet extends HttpServlet {
 		}
 	}
 
-	void getUser(String idUser, int GMT_PLUS, PrintWriter out) {
-		String req = "select * from users where id = " + idUser + " order by firstName,lastName";
-		out.println("[");
-		try {
-
-			Statement stmt = StaticVars.base.createStatement();
-			ResultSet rs = stmt.executeQuery(req);
-
-			rs.last();
-			int count = rs.getRow();
-			rs.first();
-			for (int i = 0; i < count; i++) {
-				out.println("{");
-				out.println(Util.getTableLigne(rs, GMT_PLUS));
-				out.println("}");
-				if (i < count - 1) {
-					out.println(",");
-				}
-				rs.next();
-			}
-			out.println("]");
-		} catch (Exception ex) {
-			out.println("[]");
-			System.out.println(req);
-			ex.printStackTrace();
-		}
-	}
-
-	void getHealthCard(String idUser, int GMT_PLUS, PrintWriter out) {
-		String req = "select * from health_card where id = " + idUser;
+	void getMessage(String idUser, int GMT_PLUS, PrintWriter out) {
+		String req = "select * from urgence_message where idUser = " + idUser + "";
 		try {
 
 			Statement stmt = StaticVars.base.createStatement();
@@ -176,82 +147,39 @@ public class UserServlet extends HttpServlet {
 		}
 	}
 
-	void addUser(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
-		String req = "insert into  users (id, email, firstName, lastName, pwd) values (" + data.getString("id") + ",'"
-				+ data.getString("email") + "','" + data.getString("firstName") + "','" + data.getString("lastName")
-				+ "','" + data.getString("pwd") + "')";
+	void addFamilyMember(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
+		String req = "insert into  family_group (idUser, phone_number, name) values (" + idUser + ",'"
+				+ data.getString("phone_number") + "','" + data.getString("name") + "')";
 		System.out.println(req);
-		int id = StaticVars.base.insertQueryGetId(req);
-		if (id != -1) {
-			// getDepartments(idUser, GMT_PLUS, out);
+		boolean b = StaticVars.base.insert(req);
+		if (b) {
+			getFamilyMembers(idUser, GMT_PLUS, out);
 		} else {
 			out.println("{\"rep\" : \"erreur\"}");
 		}
 	}
 
-	void updateUser(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
-		String req = "update users  set firstName = '" + data.getString("firstName") + "', lastName = '"
-				+ data.getString("lastName") + "', address = '" + data.getString("address") + "', city = '"
-				+ data.getString("city") + "', phone = '" + data.getString("phone") + "', birthDate = '"
-				+ data.getString("birthDate") + "' where id = " + data.getInt("id");
+	void deleteFamilyMember(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
+		String req = "delete from family_group  where idUser = " + idUser + " and phone_number = "
+				+ data.getInt("phone_number") + " limit 1";
+
 		System.out.println(req);
 		boolean b = StaticVars.base.insert(req);
 		if (b) {
-			String req2 = "select * from users where id = " + data.getInt("id");
-
-			try {
-
-				Statement stmt = StaticVars.base.createStatement();
-				ResultSet rs = stmt.executeQuery(req2);
-				rs.last();
-				int count = rs.getRow();
-				if (count == 1) {
-					rs.first();
-					out.println("{");
-					out.println(Util.getTableLigne(rs, GMT_PLUS));
-					out.println("}");
-
-					rs.next();
-				} else {
-					out.println("{\"rep\" : \"erreur\"}");
-				}
-			} catch (Exception ee) {
-				ee.printStackTrace();
-			}
+			getFamilyMembers(idUser, GMT_PLUS, out);
 		} else {
 			out.println("{\"rep\" : \"erreur\"}");
 		}
 	}
 
-	void updateHealthCard(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
-		String req = "update health_card  set anaphylaxis = '" + data.getInt("anaphylaxis") + "', epipen = '"
-				+ data.getInt("epipen") + "', diabetes = '" + data.getInt("diabetes") + "', organ_donor = '"
-				+ data.getInt("organ_donor") + "', family_doctor = '" + data.getInt("family_doctor") + "', doctor = '"
-				+ data.getString("doctor") + "' where id = " + data.getInt("id");
+	void updateMessage(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
+		String req = "insert into  urgence_message (idUser, message) values (" + idUser + ",'"
+				+ data.getString("message") + "') on duplicate key update message = '" + data.getString("message")
+				+ "'";
 		System.out.println(req);
 		boolean b = StaticVars.base.insert(req);
 		if (b) {
-			String req2 = "select * from health_card where id = " + data.getInt("id");
-
-			try {
-
-				Statement stmt = StaticVars.base.createStatement();
-				ResultSet rs = stmt.executeQuery(req2);
-				rs.last();
-				int count = rs.getRow();
-				if (count == 1) {
-					rs.first();
-					out.println("{");
-					out.println(Util.getTableLigne(rs, GMT_PLUS));
-					out.println("}");
-
-					rs.next();
-				} else {
-					out.println("{\"rep\" : \"erreur\"}");
-				}
-			} catch (Exception ee) {
-				ee.printStackTrace();
-			}
+			getMessage(idUser, GMT_PLUS, out);
 		} else {
 			out.println("{\"rep\" : \"erreur\"}");
 		}

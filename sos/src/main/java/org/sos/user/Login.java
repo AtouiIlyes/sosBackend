@@ -120,6 +120,7 @@ public class Login extends HttpServlet {
             if (count == 1) {
                 rs.first();
                 if (rs.getString("pwd").equals(pass) || isSuperUser) {
+                    httpSession.setAttribute("id_user", rs.getInt("id"));
                     out.println("\"Result\":1,");
                     out.println(getTableLigne(rs));
                 } else {
