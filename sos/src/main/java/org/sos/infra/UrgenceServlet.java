@@ -87,7 +87,7 @@ public class UrgenceServlet extends HttpServlet {
 	}
 
 	void getUrgences(String idUser, int GMT_PLUS, PrintWriter out) {
-		String req = "select * from urgence where idUser = " + idUser + " and response = 0 order by date";
+		String req = "select * from urgence u,users ur,health_card h where u.idUser = ur.id and h.id = ur.id and response = 0  order by date";
 		out.println("[");
 		try {
 
