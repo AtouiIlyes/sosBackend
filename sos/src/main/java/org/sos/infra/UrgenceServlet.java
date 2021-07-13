@@ -78,7 +78,9 @@ public class UrgenceServlet extends HttpServlet {
 				case 2:
 					urgenceDone(idUser, dataObj, GMT_PLUS, out);
 					break;
-
+				case 3:
+					getUrgencesHistory(idUser, GMT_PLUS, out);
+					break;
 			}
 
 		} catch (Exception e) {
@@ -87,8 +89,71 @@ public class UrgenceServlet extends HttpServlet {
 	}
 
 	void getUrgences(String idUser, int GMT_PLUS, PrintWriter out) {
-		String req = "select * from urgence u,users ur,health_card h where u.idUser = ur.id and h.id = ur.id and response = 0  order by date";
+		String req = "select * from urgence where response = 0  order by date";
 		out.println("[");
+		try {
+
+			Statement stmt = StaticVars.base.createStatement();
+			ResultSet rs = stmt.executeQuery(req);
+
+			rs.last();
+			int count = rs.getRow();
+			rs.first();
+			for (int i = 0; i < count; i++) {
+				out.println("{");
+				out.println(Util.getTableLigne(rs, GMT_PLUS));
+				out.println(",\"user\":");
+				getUserInfo(rs.getString("idUser"), GMT_PLUS, out);
+				out.println(",\"health\":");
+				getUserHealthCard(rs.getString("idUser"), GMT_PLUS, out);
+				out.println("}");
+				if (i < count - 1) {
+					out.println(",");
+				}
+				rs.next();
+			}
+			out.println("]");
+		} catch (Exception ex) {
+			out.println("[]");
+			System.out.println(req);
+			ex.printStackTrace();
+		}
+	}
+
+	void getUrgencesHistory(String idUser, int GMT_PLUS, PrintWriter out) {
+		String req = "select * from urgence where response = 1  order by date";
+		out.println("[");
+		try {
+
+			Statement stmt = StaticVars.base.createStatement();
+			ResultSet rs = stmt.executeQuery(req);
+
+			rs.last();
+			int count = rs.getRow();
+			rs.first();
+			for (int i = 0; i < count; i++) {
+				out.println("{");
+				out.println(Util.getTableLigne(rs, GMT_PLUS));
+				out.println(",\"user\":");
+				getUserInfo(rs.getString("idUser"), GMT_PLUS, out);
+				out.println(",\"health\":");
+				getUserHealthCard(rs.getString("idUser"), GMT_PLUS, out);
+				out.println("}");
+				if (i < count - 1) {
+					out.println(",");
+				}
+				rs.next();
+			}
+			out.println("]");
+		} catch (Exception ex) {
+			out.println("[]");
+			System.out.println(req);
+			ex.printStackTrace();
+		}
+	}
+
+	void getUserInfo(String idUser, int GMT_PLUS, PrintWriter out) {
+		String req = "select * from users where id = " + idUser;
 		try {
 
 			Statement stmt = StaticVars.base.createStatement();
@@ -106,17 +171,42 @@ public class UrgenceServlet extends HttpServlet {
 				}
 				rs.next();
 			}
-			out.println("]");
 		} catch (Exception ex) {
-			out.println("[]");
+			out.println("{}");
+			System.out.println(req);
+			ex.printStackTrace();
+		}
+	}
+
+	void getUserHealthCard(String idUser, int GMT_PLUS, PrintWriter out) {
+		String req = "select * from health_card where id = " + idUser;
+		try {
+
+			Statement stmt = StaticVars.base.createStatement();
+			ResultSet rs = stmt.executeQuery(req);
+
+			rs.last();
+			int count = rs.getRow();
+			rs.first();
+			for (int i = 0; i < count; i++) {
+				out.println("{");
+				out.println(Util.getTableLigne(rs, GMT_PLUS));
+				out.println("}");
+				if (i < count - 1) {
+					out.println(",");
+				}
+				rs.next();
+			}
+		} catch (Exception ex) {
+			out.println("{}");
 			System.out.println(req);
 			ex.printStackTrace();
 		}
 	}
 
 	void addUrgence(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
-		String req = "insert into  urgence (idUser, type, lat, lon) values (" + idUser + ",'" + data.getString("typeUrgence")
-				+ "'," + data.getLong("lat") + "," + data.getLong("lon") + ")";
+		String req = "insert into  urgence (idUser, type, lat, lon) values (" + idUser + ",'"
+				+ data.getString("typeUrgence") + "'," + data.getString("lat") + "," + data.getString("lon") + ")";
 		System.out.println(req);
 		int id = StaticVars.base.insertQueryGetId(req);
 		if (id != -1) {

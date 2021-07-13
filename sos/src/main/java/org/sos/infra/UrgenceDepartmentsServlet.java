@@ -121,7 +121,7 @@ public class UrgenceDepartmentsServlet extends HttpServlet {
 
     void addDepartment(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
         String req = "insert into  deparments (name, lat, lon, role) values ('" + data.getString("name") + "',"
-                + data.getLong("lat") + "," + data.getLong("lon") + ",'" + data.getString("role") + "')";
+                + data.getString("lat") + "," + data.getString("lon") + ",'" + data.getString("role") + "')";
         System.out.println(req);
         int id = StaticVars.base.insertQueryGetId(req);
         if (id != -1) {

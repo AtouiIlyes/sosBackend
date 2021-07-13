@@ -108,6 +108,10 @@ public class UserServlet extends HttpServlet {
 			for (int i = 0; i < count; i++) {
 				out.println("{");
 				out.println(Util.getTableLigne(rs, GMT_PLUS));
+				out.println(",\"user\":");
+				getUserInfo(rs.getString("id"), GMT_PLUS, out);
+				out.println(",\"health\":");
+				getUserHealthCard(rs.getString("id"), GMT_PLUS, out);
 				out.println("}");
 				if (i < count - 1) {
 					out.println(",");
@@ -117,6 +121,63 @@ public class UserServlet extends HttpServlet {
 			out.println("]");
 		} catch (Exception ex) {
 			out.println("[]");
+			System.out.println(req);
+			ex.printStackTrace();
+		}
+	}
+
+	void getUserInfo(String idUser, int GMT_PLUS, PrintWriter out) {
+		String req = "select * from users where id = " + idUser;
+		try {
+
+			Statement stmt = StaticVars.base.createStatement();
+			ResultSet rs = stmt.executeQuery(req);
+
+			rs.last();
+			int count = rs.getRow();
+			rs.first();
+			if (count > 0) {
+				out.println("{");
+				out.println(Util.getTableLigne(rs, GMT_PLUS));
+				out.println("}");
+			} else {
+				out.println("{}");
+			}
+		} catch (Exception ex) {
+			out.println("{}");
+			System.out.println(req);
+			ex.printStackTrace();
+		}
+	}
+
+	void getUserHealthCard(String idUser, int GMT_PLUS, PrintWriter out) {
+		String req = "select * from health_card where id = " + idUser;
+		try {
+
+			Statement stmt = StaticVars.base.createStatement();
+			ResultSet rs = stmt.executeQuery(req);
+
+			rs.last();
+			int count = rs.getRow();
+			rs.first();
+			if (count > 0) {
+				out.println("{");
+				out.println(Util.getTableLigne(rs, GMT_PLUS));
+				out.println("}");
+			} else {
+				out.println("{");
+				out.println("\"id\" :" + idUser + ",");
+				out.println("\"anaphylaxis\" :0,");
+				out.println("\"epipen\" :0,");
+				out.println("\"diabetes\" :0,");
+				out.println("\"organ_donor\" :0,");
+				out.println("\"family_doctor\" :0,");
+				out.println("\"blood_group\" :\"-\",");
+				out.println("\"doctor\":\"-\"");
+				out.println("}");
+			}
+		} catch (Exception ex) {
+			out.println("{}");
 			System.out.println(req);
 			ex.printStackTrace();
 		}
@@ -226,8 +287,9 @@ public class UserServlet extends HttpServlet {
 	void updateHealthCard(String idUser, JSONObject data, int GMT_PLUS, PrintWriter out) {
 		String req = "update health_card  set anaphylaxis = '" + data.getInt("anaphylaxis") + "', epipen = '"
 				+ data.getInt("epipen") + "', diabetes = '" + data.getInt("diabetes") + "', organ_donor = '"
-				+ data.getInt("organ_donor") + "', family_doctor = '" + data.getInt("family_doctor") + "', doctor = '"
-				+ data.getString("doctor") + "' where id = " + data.getInt("id");
+				+ data.getInt("organ_donor") + "', blood_group = '" + data.getString("blood_group")
+				+ "', family_doctor = '" + data.getInt("family_doctor") + "', doctor = '" + data.getString("doctor")
+				+ "' where id = " + data.getInt("id");
 		System.out.println(req);
 		boolean b = StaticVars.base.insert(req);
 		if (b) {
